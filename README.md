@@ -86,7 +86,7 @@ Resolution-Rally/
 ├─ package.json
 ├─ tailwind.config.js
 └─ README.md
-
+```
 
 <p align="left"> <img src="https://komarev.com/ghpvc/?username=jayesh-kahnani&label=Profile%20views&color=0e75b6&style=flat" alt="jayesh-kahnani" /> </p>
 
