@@ -1,7 +1,3 @@
-<h1 align="center">Hi 👋, I'm Jayesh</h1>
-<h3 align="center">I am Designer and Developer pursuing a degree in physics</h3>
-
-
 # Presenting Resolution Rally 2025
 
 **Resolution Rally** is Azim Premji University’s **Policy Debate Tournament**, held on **September 26 & 27, 2025**. This project includes both **admin tools** for managing matches and **participant-facing dashboards** for viewing fixtures, brackets, and results.
@@ -87,6 +83,8 @@ Resolution-Rally/
 ├─ tailwind.config.js
 └─ README.md
 ```
+<h2 align="center">Hi 👋, I'm Jayesh</h1>
+<h3 align="center">I am Designer and Developer pursuing a degree in physics</h3>
 
 <p align="left"> <img src="https://komarev.com/ghpvc/?username=jayesh-kahnani&label=Profile%20views&color=0e75b6&style=flat" alt="jayesh-kahnani" /> </p>
 
