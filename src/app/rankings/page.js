@@ -1,9 +1,9 @@
-// src/app/rankings/page.js
 "use client";
 
 import { useState, useEffect } from "react";
 import { db } from "../../../firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
+import { Phone, Mail } from "lucide-react";
 
 export default function RankingsPage() {
   const [rankings, setRankings] = useState([]);
@@ -18,11 +18,8 @@ export default function RankingsPage() {
         ...d.data(),
       }));
 
-      // sort by totalScore descending, then wins if tie
-      const sorted = teams.sort((a, b) => {
-        if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
-        return b.wins - a.wins;
-      });
+      // Sort by totalScore descending
+      const sorted = teams.sort((a, b) => b.totalScore - a.totalScore);
 
       setRankings(sorted);
     } catch (err) {
@@ -38,97 +35,90 @@ export default function RankingsPage() {
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto mt-12 px-6 py-8 bg-white rounded-2xl shadow-xl">
-      <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
-        <h1 className="text-3xl font-extrabold text-gray-800">Rankings</h1>
-        <button
-          onClick={fetchRankings}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition"
-        >
-          Refresh Rankings
-        </button>
+    <div className="min-h-screen bg-[#E3DFD3] flex flex-col items-center p-6">
+      {/* Top Section */}
+      <div className="w-full max-w-5xl relative mb-1 h-40 md:h-48 lg:h-56">
+  <h1 className="absolute top-25 left-1/20 transform -translate-y-1/2 text-3xl md:text-5xl font-extrabold text-[#161B3B] max-w-[60%] lg:max-w-[55%] whitespace-normal">
+          Rankings
+        </h1>
+
+        {/* Mascot */}
+        <img
+          src="/mascot.png"
+          alt="Mascot"
+    className="absolute top-1/2 right-0 transform -translate-y-1/2 w-48 md:w-64 lg:w-80 h-auto object-contain transition-transform duration-300 hover:scale-105"
+        />
       </div>
 
-      {loading ? (
-        <div className="py-8 text-center text-gray-500">Loading rankings…</div>
-      ) : rankings.length === 0 ? (
-        <div className="py-8 text-center text-gray-500">No teams found.</div>
-      ) : (
-        <>
-          {/* Large screens: table view */}
-          <div className="hidden lg:block overflow-x-auto">
-            <table className="min-w-full text-sm border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100 text-gray-600 font-semibold">
-                  <th className="border px-4 py-2">#</th>
-                  <th className="border px-4 py-2 text-left">Team</th>
-                  <th className="border px-4 py-2">Total Score</th>
-                  <th className="border px-4 py-2">Wins</th>
-                  <th className="border px-4 py-2">Losses</th>
-                  <th className="border px-4 py-2">Matches Played</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rankings.map((t, idx) => {
-                  const isTop8 = idx < 8;
-                  return (
-                    <tr
-                      key={t.id}
-                      className={`hover:bg-gray-50 ${
-                        isTop8 ? "bg-blue-50 font-medium" : "bg-white"
-                      }`}
-                    >
-                      <td className="border px-4 py-2 text-center">{idx + 1}</td>
-                      <td className="border px-4 py-2">{t.name || "Unnamed Team"}</td>
-                      <td className="border px-4 py-2 text-center">{t.totalScore || 0}</td>
-                      <td className="border px-4 py-2 text-center">{t.wins || 0}</td>
-                      <td className="border px-4 py-2 text-center">{t.losses || 0}</td>
-                      <td className="border px-4 py-2 text-center">{t.matchesPlayed || 0}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+      {/* Rankings Grid */}
+      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 w-full max-w-5xl mb-12">
+        {loading ? (
+          <p className="text-[#444E5F] text-center col-span-full">
+            Loading rankings…
+          </p>
+        ) : rankings.length === 0 ? (
+          <p className="text-[#444E5F] text-center col-span-full">
+            No teams found.
+          </p>
+        ) : (
+          rankings.map((team, idx) => {
+            const isTop8 = idx < 8;
+            return (
+              <div
+                key={team.id}
+                className={`flex flex-col gap-2 p-5 rounded-xl border shadow-md hover:shadow-lg hover:scale-105 transition transform ${
+                  isTop8
+                    ? "bg-[#cec9a8] border-[#B0AC9E]"
+                    : "bg-[#D9D7C4] border-[#B0AC9E]"
+                }`}
+              >
+                <h2 className="text-lg font-semibold text-[#161B3B] flex justify-between">
+                  <span className="max-w-[60%] truncate">
+                    {idx + 1}. {team.name || "Unnamed Team"}
+                  </span>
+                  <span>({team.totalScore || 0})</span>
+                </h2>
 
-          {/* Small screens: card view */}
-          <div className="lg:hidden flex flex-col gap-4">
-            {rankings.map((t, idx) => {
-              const isTop8 = idx < 8;
-              return (
-                <div
-                  key={t.id}
-                  className={`p-4 rounded-xl shadow hover:shadow-md transition border ${
-                    isTop8
-                      ? "bg-blue-50 border-blue-300 font-semibold"
-                      : "bg-white border-gray-200"
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-lg">
-                      {idx + 1}. {t.name || "Unnamed Team"}
+                <div className="text-sm text-[#444E5F] mt-1 flex justify-between">
+                  <span>Matches: {team.matchesPlayed || 0}</span>
+                  {isTop8 && (
+                    <span className="bg-[#96A086] text-white px-2 py-1 rounded-full text-xs">
+                      Playoff
                     </span>
-                    {isTop8 && (
-                      <span className="text-sm text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
-                        Playoff
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex justify-between text-gray-600 text-sm">
-                    <span>Score: {t.totalScore || 0}</span>
-                    <span>Wins: {t.wins || 0}</span>
-                    <span>Losses: {t.losses || 0}</span>
-                    <span>Matches: {t.matchesPlayed || 0}</span>
-                  </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+              </div>
+            );
+          })
+        )}
+      </div>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
-        Top 8 teams qualify for the playoffs. Rankings are based on "scores" not "matches won".
+      {/* Support Section */}
+      <div className="w-full max-w-5xl p-6 rounded-2xl bg-[#444E5F] text-[#E3DFD3] shadow-lg mb-8">
+        <h2 className="text-xl font-semibold flex items-center gap-2 mb-3">
+          <Phone className="w-5 h-5" /> Support
+        </h2>
+        <p className="text-[#96A086] text-sm mb-3">
+          If you have any questions or need assistance, reach out to us:
+        </p>
+        <ul className="space-y-2 text-sm">
+          <li className="flex items-center gap-2">
+            <Phone className="w-4 h-4" /> +91 9150833323
+          </li>
+          <li className="flex items-center gap-2">
+            <Mail className="w-4 h-4" />
+            <a
+              href="mailto:debate.club@apu.edu.in"
+              className="underline hover:text-[#96A086]"
+            >
+              debate.club@apu.edu.in
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <p className="text-[#444E5F] text-xs mb-4 text-center">
+        © 2025 Resolution Rally. All rights reserved.
       </p>
     </div>
   );
