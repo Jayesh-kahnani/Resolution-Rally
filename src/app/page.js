@@ -1,86 +1,136 @@
 "use client";
-
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { db } from "../../firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
+import {
+  BookOpen,
+  Users,
+  ListOrdered,
+  FileText,
+  Phone,
+  Mail,
+} from "lucide-react";
 
 export default function HomePage() {
-  // optionally fetch next match to display
-  const [nextMatch, setNextMatch] = useState(null);
+  const [days, setDays] = useState([]);
 
   useEffect(() => {
-    // fetch upcoming match from Firestore // pseudo 
-    // setNextMatch(...)
+    async function fetchDays() {
+      const matchesSnap = await getDocs(collection(db, "matches"));
+      const uniqueDays = [
+        ...new Set(matchesSnap.docs.map((doc) => doc.data().day)),
+      ];
+      setDays(uniqueDays);
+    }
+    fetchDays();
   }, []);
 
+  const staticLinks = [
+    {
+      href: "/rankings",
+      label: "Rankings",
+      icon: ListOrdered,
+      subtitle: "See the current standings of all teams",
+    },
+    {
+      href: "/rulebook",
+      label: "Rulebook",
+      icon: BookOpen,
+      subtitle: "Read the official tournament rules",
+    },
+    {
+      href: "/report",
+      label: "Report",
+      icon: FileText,
+      subtitle: "Report an individual or team conflicts",
+    },
+    {
+      href: "/brackets",
+      label: "Playoffs",
+      icon: Users,
+      subtitle: "Check out the tournament matchups",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col">
-      {/* Header */}
-      <header className="w-full px-6 py-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#ff5757]">Resolution Rally 2025</h1>
-        <nav className="flex gap-4 text-base">
-          <Link href="/fixtures" className="hover:text-[#0097b2]">Fixtures</Link>
-          <Link href="/playoffs" className="hover:text-[#0097b2]">Playoffs</Link>
-          <Link href="/results" className="hover:text-[#0097b2]">Results</Link>
-          <Link href="/rulebook" className="hover:text-[#0097b2]">Rulebook</Link>
-        </nav>
-      </header>
-
-      {/* Hero */}
-      <section className="flex flex-col items-center justify-center px-6 py-16 flex-1">
-        <h2 className="text-4xl md:text-5xl font-extrabold mb-2">Resolution Rally</h2>
-        <p className="text-xl text-gray-700 mb-1">September 26 & 27</p>
-        <p className="text-lg text-gray-600 mb-6 text-center max-w-md">
-          Azim Premji University’s flagship policy debate tournament
+    <div className="min-h-screen bg-[#E3DFD3] flex flex-col items-center p-6">
+      {/* Top Section */}
+      <div className="w-full max-w-5xl flex flex-col items-center justify-center mb-12 gap-4 text-center">
+        <img
+          src="/logo2.png"
+          alt="Tournament Logo"
+          className="w-full max-w-3xl h-auto object-contain mb-4"
+        />
+        <h1 className="text-3xl md:text-5xl font-extrabold text-[#161B3B]">
+          Resolution Rally 2025
+        </h1>
+        <p className="text-[#444E5F] text-sm md:text-lg mt-2">
+          The ultimate debate tournament experience
         </p>
-        <Link href="/fixtures">
-          <button className="bg-[#ff5757] text-white px-6 py-3 rounded-xl shadow hover:bg-[#e74c4c] transition">
-            View Fixtures
-          </button>
-        </Link>
-      </section>
+      </div>
 
-      {/* Next Match or Notice */}
-      <section className="px-6 py-8 w-full max-w-md mx-auto">
-        {nextMatch ? (
-          <div className="border rounded-xl px-4 py-6 shadow">
-            <p className="text-gray-500 mb-2 text-sm">Next Match</p>
-            <p className="font-semibold text-lg">{nextMatch.teamA} vs {nextMatch.teamB}</p>
-            <p className="text-gray-700 text-sm mt-1">{nextMatch.dateTime}</p>
-          </div>
-        ) : (
-          <div className="text-center text-gray-600">All matches completed. Stay tuned for results!</div>
-        )}
-      </section>
+      {/* Navigation Grid */}
+      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 w-full max-w-5xl mb-12">
 
-      {/* Format Overview */}
-      <section className="px-6 py-10 bg-gray-50">
-        <h3 className="text-2xl font-bold text-center mb-6">Format</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-xl mx-auto">
-          {[
-            { title: "The Case", desc: "Round 1: Ideological exposition" },
-            { title: "The Evidence", desc: "Round 2: Policy proposals" },
-            { title: "The Gavel", desc: "Round 3: Cross-examination" },
-          ].map((card, idx) => (
-            <div key={idx} className="bg-white rounded-2xl shadow-md p-6 text-center hover:shadow-lg transition">
-              <h4 className="text-xl font-semibold text-[#0097b2] mb-2">{card.title}</h4>
-              <p className="text-gray-600 text-sm">{card.desc}</p>
+        {days.map((day) => (
+          <Link key={day} href={`/match-${day}`}>
+            <div className="flex items-center gap-4 p-5 rounded-xl bg-[#96A086] shadow-md hover:shadow-xl hover:scale-105 transition transform cursor-pointer">
+              <Users className="w-6 h-6 text-[#161B3B]" />
+              <div>
+                <h2 className="text-lg font-semibold text-[#161B3B]">
+                  Match {day}
+                </h2>
+                <p className="text-[#444E5F] text-xs">
+                  View all pairings for match {day}
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-      </section>
+          </Link>
+        ))}
 
-      {/* Quick Links */}
-      <section className="px-6 py-6 w-full flex justify-center gap-4">
-        <Link href="/fixtures" className="text-[#0097b2] underline">Fixtures</Link>
-        <Link href="/playoffs" className="text-[#0097b2] underline">Playoffs Bracket</Link>
-        <Link href="/results" className="text-[#0097b2] underline">Results</Link>
-      </section>
 
-      {/* Footer */}
-      <footer className="bg-black text-white text-center py-6 mt-auto">
-        <p>📧 debateclub@apu.edu.in | 📞 +91 7550208248</p>
-        <p className="mt-2 text-sm">© 2025 Resolution Rally</p>
-      </footer>
+                {staticLinks.map(({ href, label, icon: Icon, subtitle }) => (
+          <Link key={href} href={href}>
+            <div className="flex items-center gap-4 p-5 rounded-xl bg-[#96A086] shadow-md hover:shadow-xl hover:scale-105 transition transform cursor-pointer">
+              <Icon className="w-6 h-6 text-[#161B3B]" />
+              <div>
+                <h2 className="text-lg font-semibold text-[#161B3B]">{label}</h2>
+                <p className="text-[#444E5F] text-xs">{subtitle}</p>
+              </div>
+            </div>
+          </Link>
+        ))}
+
+      </div>
+
+      {/* Support Section */}
+      <div className="w-full max-w-5xl p-6 rounded-2xl bg-[#444E5F] text-[#E3DFD3] shadow-lg mb-8">
+        <h2 className="text-xl font-semibold flex items-center gap-2 mb-3">
+          <Phone className="w-5 h-5" /> Support
+        </h2>
+        <p className="text-[#96A086] text-sm mb-3">
+          If you have any questions or need assistance, reach out to us:
+        </p>
+        <ul className="space-y-2 text-sm">
+          <li className="flex items-center gap-2">
+            <Phone className="w-4 h-4" /> +91 9150833323
+          </li>
+          <li className="flex items-center gap-2">
+            <Mail className="w-4 h-4" />
+            <a
+              href="mailto:debate.club@apu.edu.in"
+              className="underline hover:text-[#96A086]"
+            >
+              debate.club@apu.edu.in
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <p className="text-[#444E5F] text-xs mb-4 text-center">
+        © 2025 Resolution Rally. All rights reserved.
+      </p>
     </div>
   );
 }
