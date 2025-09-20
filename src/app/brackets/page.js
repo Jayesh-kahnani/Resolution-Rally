@@ -29,73 +29,114 @@ export default function BracketsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen text-lg font-semibold">
+      <div className="flex items-center justify-center h-screen text-lg font-semibold text-[#161B3B]">
         Loading brackets...
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-3xl font-bold text-center mb-10">Tournament Bracket</h1>
+  // Determine the final winner if finals exist and completed
+  const finalMatch = matches.F[0];
+  const finalWinner =
+    finalMatch?.status === "completed"
+      ? finalMatch.winner === finalMatch.teamA?.id
+        ? finalMatch.teamA?.name
+        : finalMatch.teamB?.name
+      : null;
 
-      <div className="flex justify-center gap-12 overflow-x-auto">
-        <BracketColumn title="Quarterfinals" matches={matches.QF} totalSlots={4} />
-        <BracketColumn title="Semifinals" matches={matches.SF} totalSlots={2} />
-        <BracketColumn title="Final" matches={matches.F} totalSlots={1} />
+  return (
+    <div className="min-h-screen bg-[#E3DFD3] p-6 relative">
+      <h1 className="text-3xl md:text-5xl font-extrabold text-[#161B3B] text-center mb-8">
+        Resolution Rally Playoffs
+      </h1>
+
+      {/* Central vertical line */}
+      <div className="absolute left-1/2 top-36 bottom-8 w-0.5 bg-[#B0AC9E] -translate-x-1/2"></div>
+
+      <div className="flex flex-col items-center gap-16">
+        <BracketStage title="Quarterfinals" matches={matches.QF} offset="left" />
+        <BracketStage title="Semifinals" matches={matches.SF} offset="right" />
+        <BracketStage title="Final" matches={matches.F} offset="left" />
+
+        {/* Final Winner Card */}
+        {finalWinner && (
+          <div className="w-64 bg-[#96A086] text-white font-bold rounded-xl p-6 text-center shadow-lg">
+            🏆 Champions: {finalWinner}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function BracketColumn({ title, matches, totalSlots }) {
+function BracketStage({ title, matches, offset }) {
   return (
-    <div className="flex flex-col items-center relative">
-      <h2 className="text-lg font-semibold mb-6">{title}</h2>
-      <div className="flex flex-col justify-around h-full space-y-8 relative">
-        {Array.from({ length: totalSlots }).map((_, i) => {
-          const match = matches[i] || null;
-          return (
-            <div key={i} className="relative flex items-center">
-              <MatchBox match={match} />
-              {/* Connector line to next column */}
-              <div className="absolute right-[-48px] top-1/2 w-12 border-t-2 border-gray-400"></div>
-            </div>
-          );
-        })}
-      </div>
+    <div className="flex flex-col w-full relative">
+      <span
+        className={`w-fit p-6 rounded-2xl shadow-lg bg-[#D9D7C4] ${
+          offset === "left" ? "ml-auto" : "mr-auto"
+        }`}
+      >
+        <h2 className="text-xl md:text-2xl font-semibold mb-4 text-[#161B3B]">{title}</h2>
+
+        <div className="flex flex-col items-center gap-6 w-full">
+          {matches.length === 0 &&
+            Array.from({
+              length:
+                2 **
+                (3 - (title === "Final" ? 2 : title === "Semifinals" ? 1 : 0)),
+            }).map((_, i) => <MatchBox key={i} match={null} offset={offset} />)}
+
+          {matches.map((match, i) => (
+            <MatchBox key={match?.id || i} match={match} offset={offset} />
+          ))}
+        </div>
+      </span>
     </div>
   );
 }
 
-function MatchBox({ match }) {
+function MatchBox({ match, offset }) {
+  const positionClass = offset === "left" ? "ml-auto" : "mr-auto";
+
   if (!match) {
     return (
-      <div className="w-48 bg-gray-200 rounded-xl p-4 text-center text-gray-500">
+      <div
+        className={`w-64 bg-[#E3DFD3] rounded-xl p-3 text-center text-[#444E5F] mb-4 border border-[#B0AC9E] ${positionClass}`}
+      >
         TBD
       </div>
     );
   }
 
   return (
-    <div className="w-48 bg-white rounded-xl shadow p-4 text-center">
-      <p className="text-xs text-gray-400 mb-2">{match.id}</p>
+    <div
+      className={`w-64 rounded-xl shadow-md p-3 mb-4 border border-[#B0AC9E] ${positionClass} bg-[#D9D7C4]`}
+    >
       <div
-        className={`p-2 rounded-lg mb-2 ${
-          match.winner === match.teamA?.id ? "bg-green-100 font-bold" : ""
+        className={`p-2 rounded-lg mb-1 flex justify-between ${
+          match.winner === match.teamA?.id
+            ? "bg-[#96A086] font-bold text-white"
+            : ""
         }`}
       >
-        {match.teamA?.name || "TBD"} ({match.teamA?.totalScore})
+        <span>{match.teamA?.name || "TBD"}</span>
+        <span className="font-semibold">{match.teamA?.totalScore || 0}</span>
       </div>
+
       <div
-        className={`p-2 rounded-lg ${
-          match.winner === match.teamB?.id ? "bg-green-100 font-bold" : ""
+        className={`p-2 rounded-lg flex justify-between ${
+          match.winner === match.teamB?.id
+            ? "bg-[#96A086] font-bold text-white"
+            : ""
         }`}
       >
-        {match.teamB?.name || "TBD"} ({match.teamB?.totalScore})
+        <span>{match.teamB?.name || "TBD"}</span>
+        <span className="font-semibold">{match.teamB?.totalScore || 0}</span>
       </div>
-      <p className="text-xs text-gray-400 mt-2">
-        {match.status === "completed"
+
+      <p className="text-xs text-[#444E5F] mt-1">
+        {match?.status === "completed"
           ? `Winner: ${
               match.winner === match.teamA?.id
                 ? match.teamA?.name

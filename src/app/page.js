@@ -34,74 +34,76 @@ export default function HomePage() {
       subtitle: "See the current standings of all teams",
     },
     {
-      href: "/rulebook",
-      label: "Rulebook",
-      icon: BookOpen,
-      subtitle: "Read the official tournament rules",
-    },
-    {
-      href: "/report",
-      label: "Report",
-      icon: FileText,
-      subtitle: "Report an individual or team conflicts",
-    },
-    {
       href: "/brackets",
       label: "Playoffs",
       icon: Users,
       subtitle: "Check out the tournament matchups",
     },
+    {
+      href: "/rulebook.pdf",
+      label: "Rulebook",
+      icon: BookOpen,
+      subtitle: "Download the official tournament rules",
+      download: true,
+    },
+    // {
+    //   href: "/report",
+    //   label: "Report",
+    //   icon: FileText,
+    //   subtitle: "Report an individual or team conflicts",
+    // },
   ];
 
   return (
     <div className="min-h-screen bg-[#E3DFD3] flex flex-col items-center p-6">
       {/* Top Section */}
-      <div className="w-full max-w-5xl flex flex-col items-center justify-center mb-12 gap-4 text-center">
+      <div className="w-full max-w-5xl flex flex-col items-center justify-center mb-10 gap-4 text-center">
         <img
-          src="/logo2.png"
-          alt="Tournament Logo"
+          src="/logo.png"
+          alt="Resolution Rally Logo"
           className="w-full max-w-3xl h-auto object-contain mb-4"
         />
         <h1 className="text-3xl md:text-5xl font-extrabold text-[#161B3B]">
           Resolution Rally 2025
         </h1>
-        <p className="text-[#444E5F] text-sm md:text-lg mt-2">
-          The ultimate debate tournament experience
+        <p className="text-[#444E5F] text-sm md:text-lg ">
+          Azim Premji University's Policy Debate Tournament
         </p>
       </div>
 
       {/* Navigation Grid */}
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 w-full max-w-5xl mb-12">
-
-        {days.map((day) => (
-          <Link key={day} href={`/match-${day}`}>
-            <div className="flex items-center gap-4 p-5 rounded-xl bg-[#96A086] shadow-md hover:shadow-xl hover:scale-105 transition transform cursor-pointer">
-              <Users className="w-6 h-6 text-[#161B3B]" />
-              <div>
-                <h2 className="text-lg font-semibold text-[#161B3B]">
-                  Match {day}
-                </h2>
-                <p className="text-[#444E5F] text-xs">
-                  View all pairings for match {day}
-                </p>
+        {days
+          .filter((day) => day <= 3)
+          .map((day) => (
+            <Link key={day} href={`/matches/match-${day}`}>
+              <div className="flex items-center gap-4 p-5 rounded-xl bg-[#96A086] shadow-md hover:shadow-xl hover:scale-105 transition transform cursor-pointer">
+                <Users className="w-6 h-6 text-[#161B3B]" />
+                <div>
+                  <h2 className="text-lg font-semibold text-[#161B3B]">
+                    Match {day}
+                  </h2>
+                  <p className="text-[#444E5F] text-xs">
+                    View all pairings for match {day}
+                  </p>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))}
 
-
-                {staticLinks.map(({ href, label, icon: Icon, subtitle }) => (
+        {staticLinks.map(({ href, label, icon: Icon, subtitle }) => (
           <Link key={href} href={href}>
             <div className="flex items-center gap-4 p-5 rounded-xl bg-[#96A086] shadow-md hover:shadow-xl hover:scale-105 transition transform cursor-pointer">
               <Icon className="w-6 h-6 text-[#161B3B]" />
               <div>
-                <h2 className="text-lg font-semibold text-[#161B3B]">{label}</h2>
+                <h2 className="text-lg font-semibold text-[#161B3B]">
+                  {label}
+                </h2>
                 <p className="text-[#444E5F] text-xs">{subtitle}</p>
               </div>
             </div>
           </Link>
         ))}
-
       </div>
 
       {/* Support Section */}

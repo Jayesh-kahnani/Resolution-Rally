@@ -4,18 +4,18 @@ import { db } from "../../../../firebaseConfig";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { Users, Phone, Mail } from "lucide-react";
 
-export default function Match2Page() {
+export default function Match3Page() {
   const [matches, setMatches] = useState([]);
 
   useEffect(() => {
     async function fetchMatches() {
       try {
-        const q = query(collection(db, "matches"), where("day", "==", 2));
+        const q = query(collection(db, "matches"), where("day", "==", 3));
         const snap = await getDocs(q);
         const data = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) }));
         setMatches(data);
       } catch (err) {
-        console.error("Error fetching match-2 data:", err);
+        console.error("Error fetching match-3 data:", err);
       }
     }
     fetchMatches();
@@ -27,7 +27,7 @@ export default function Match2Page() {
 <div className="w-full max-w-5xl relative mb-1 h-40 md:h-48 lg:h-56">
   {/* Heading */}
   <h1 className="absolute top-23 left-1/20 transform -translate-y-1/2 text-3xl md:text-5xl font-extrabold text-[#161B3B] max-w-[60%] lg:max-w-[55%] whitespace-normal">
-    Match 2 Pairings
+    Match 3 Pairings
   </h1>
 
   {/* Mascot */}

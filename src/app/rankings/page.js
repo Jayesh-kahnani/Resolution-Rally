@@ -128,7 +128,7 @@ export default function RankingsPage() {
       )}
 
       <p className="mt-6 text-center text-sm text-gray-500">
-        Top 8 teams qualify for the playoffs. Rankings are based on scores and records from the Teams collection.
+        Top 8 teams qualify for the playoffs. Rankings are based on "scores" not "matches won".
       </p>
     </div>
   );
