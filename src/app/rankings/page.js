@@ -83,7 +83,7 @@ export default function RankingsPage() {
                   <span>Matches: {team.matchesPlayed || 0}</span>
                   {isTop8 && (
                     <span className="bg-[#96A086] text-white px-2 py-1 rounded-full text-xs">
-                      Playoff
+                      Playoffs
                     </span>
                   )}
                 </div>
