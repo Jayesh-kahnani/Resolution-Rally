@@ -7,7 +7,6 @@ import {
   BookOpen,
   Users,
   ListOrdered,
-  FileText,
   Phone,
   Mail,
 } from "lucide-react";
