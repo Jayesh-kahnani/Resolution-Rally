@@ -202,23 +202,25 @@ export async function generateSwissMatch(prevMatchIds = [], roundNumber = 2) {
       createdAt: new Date(),
     });
 
-    // create rounds using existing helpers (defensive; fetch members may return [])
-    const teamAMembers = await fetchTeamMembers(teamA.id).catch(() => []);
-    const teamBMembers = await fetchTeamMembers(teamB.id).catch(() => []);
+    // Round 1: select participants with role = "speaker1" or "speaker2"
+    await createRound(
+      matchId,
+      1,
+      "round 1",
+      teamAMembers.filter(m => m.role === "speaker1" || m.role === "speaker2"),
+      teamBMembers.filter(m => m.role === "speaker1" || m.role === "speaker2")
+    );
 
-    // Round 1: first two participants (or fewer if not present)
-    await createRound(matchId, 1, "round 1", (teamAMembers || []).slice(0, 2), (teamBMembers || []).slice(0, 2));
-
-    // Round 2: third participant only if exists
+    // Round 2: select participants with role = "policy"
     await createRound(
       matchId,
       2,
       "round 2",
-      (teamAMembers && teamAMembers.length > 2) ? [teamAMembers[2]] : [],
-      (teamBMembers && teamBMembers.length > 2) ? [teamBMembers[2]] : []
+      teamAMembers.filter(m => m.role === "policy"),
+      teamBMembers.filter(m => m.role === "policy")
     );
 
-    // Round 3: team-level (all participants included for reference)
+    // Round 3: team-level (all members)
     await createRound(matchId, 3, "round 3", teamAMembers || [], teamBMembers || []);
 
     createdMatchIds.push(matchId);

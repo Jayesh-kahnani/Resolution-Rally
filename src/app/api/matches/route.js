@@ -113,7 +113,6 @@ export async function generateMatch1(teams = []) {
   if (!Array.isArray(teams) || teams.length < 2) {
     throw new Error("generateMatch1 requires an array of teams (>=2).");
   }
-  // ensure even number assumed by UI / you said always even
   if (teams.length % 2 !== 0) {
     throw new Error("Team count must be even for Match 1 generation.");
   }
@@ -127,11 +126,9 @@ export async function generateMatch1(teams = []) {
     const matchIndex = idx;
     const matchId = `match-1-${matchIndex}`;
 
-    // fetch members for both teams (always return arrays)
     const teamAMembers = await fetchTeamMembers(teamA.id).catch(() => []);
     const teamBMembers = await fetchTeamMembers(teamB.id).catch(() => []);
 
-    // create match doc (fields the page expects)
     await setDoc(doc(db, "matches", matchId), {
       day: 1,
       round: "Match 1",
@@ -143,26 +140,25 @@ export async function generateMatch1(teams = []) {
       createdAt: new Date(),
     });
 
-    // Create rounds using the same structure the page reads:
-    // Round 1: first two participants each (if any)
+    // Round 1: select participants with role = "speaker1" or "speaker2"
     await createRound(
       matchId,
       1,
       "round 1",
-      (teamAMembers || []).slice(0, 2),
-      (teamBMembers || []).slice(0, 2)
+      teamAMembers.filter(m => m.role === "speaker1" || m.role === "speaker2"),
+      teamBMembers.filter(m => m.role === "speaker1" || m.role === "speaker2")
     );
 
-    // Round 2: third participant only (if exists), safe fallback to empty arrays
+    // Round 2: select participants with role = "policy"
     await createRound(
       matchId,
       2,
       "round 2",
-      (teamAMembers && teamAMembers.length > 2) ? [teamAMembers[2]] : [],
-      (teamBMembers && teamBMembers.length > 2) ? [teamBMembers[2]] : []
+      teamAMembers.filter(m => m.role === "policy"),
+      teamBMembers.filter(m => m.role === "policy")
     );
 
-    // Round 3: team-level (all participants influence team-level score later)
+    // Round 3: team-level (all members)
     await createRound(matchId, 3, "round 3", teamAMembers || [], teamBMembers || []);
 
     createdMatchIds.push(matchId);
