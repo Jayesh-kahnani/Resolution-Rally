@@ -16,7 +16,7 @@ import {
 import { generateMatch1 } from "@/app/api/matches/route";
 
 const ROUND_CRITERIA_MAX = {
-  
+
   "round 1": { matter: 8, manner: 6, method: 6 },
   "round 2": { matter: 15, manner: 10, feasibilitycreativity: 10 },
   "round 3": { questions: 10, answers: 10, answertoadjudicator: 5 },
@@ -130,25 +130,25 @@ export default function Match1Page() {
   }
 
   /** ---------------- Clear Match 1 ---------------- **/
-  async function handleClearMatch() {
-    if (!confirm("Clear Match 1 and rematchmake?")) return;
-    setLoading(true);
-    try {
-      for (const match of matches) {
-        const rSnap = await getDocs(collection(db, "matches", match.id, "rounds"));
-        for (const r of rSnap.docs) await deleteDoc(doc(db, "matches", match.id, "rounds", r.id));
-        await deleteDoc(doc(db, "matches", match.id));
-      }
-      setMatches([]);
-      setRounds({});
-      setMessage("✅ Match 1 cleared");
-    } catch (err) {
-      console.error(err);
-      setMessage("❌ Error clearing match");
-    } finally {
-      setLoading(false);
-    }
-  }
+  // async function handleClearMatch() {
+  //   if (!confirm("Clear Match 1 and rematchmake?")) return;
+  //   setLoading(true);
+  //   try {
+  //     for (const match of matches) {
+  //       const rSnap = await getDocs(collection(db, "matches", match.id, "rounds"));
+  //       for (const r of rSnap.docs) await deleteDoc(doc(db, "matches", match.id, "rounds", r.id));
+  //       await deleteDoc(doc(db, "matches", match.id));
+  //     }
+  //     setMatches([]);
+  //     setRounds({});
+  //     setMessage("✅ Match 1 cleared");
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessage("❌ Error clearing match");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
 
 
   /**
@@ -197,8 +197,9 @@ async function handleEndMatch(matchId, teamAId, teamBId, totalA, totalB, rounds)
       losses: increment(winnerId === teamAId ? 1 : 0),
       matchesPlayed: increment(1),
     });
-
+    alert("Match ended! dont click match end again!!! (for this match obv)");
     return "✅ Match ended!";
+
   } catch (err) {
     console.error("Error ending match:", err);
     return "❌ Error ending match";
@@ -239,13 +240,13 @@ async function handleEndMatch(matchId, teamAId, teamBId, totalA, totalB, rounds)
         >
           {loading ? "Generating..." : "Generate Match 1"}
         </button>
-        <button
+        {/* <button
           onClick={handleClearMatch}
           disabled={loading || matches.length === 0}
           className="bg-red-600 text-white px-5 py-2 rounded-lg shadow hover:bg-red-700 transition disabled:opacity-50"
         >
           Clear Match 1
-        </button>
+        </button> */}
       </div>
 
       {message && <p className="mb-6 text-lg font-medium text-center text-blue-700 bg-blue-100 py-2 rounded">{message}</p>}
