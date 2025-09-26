@@ -57,9 +57,25 @@ await setDoc(matchRef, {
     const teamAMembers = await fetchTeamMembers(teamA.id);
     const teamBMembers = await fetchTeamMembers(teamB.id);
 
-    // create rounds using createRound
-    await createRound(matchId, 1, "round 1", teamAMembers.slice(0, 2), teamBMembers.slice(0, 2));
-    await createRound(matchId, 2, "round 2", teamAMembers.slice(2, 3), teamBMembers.slice(2, 3));
+    // Round 1: Speaker1 + Speaker2
+    await createRound(
+      matchId,
+      1,
+      "round 1",
+      teamAMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2"),
+      teamBMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2")
+    );
+
+    // Round 2: Policy
+    await createRound(
+      matchId,
+      2,
+      "round 2",
+      teamAMembers.filter(m => m.role === "Policy"),
+      teamBMembers.filter(m => m.role === "Policy")
+    );
+
+    // Round 3: all members (team-level)
     await createRound(matchId, 3, "round 3", teamAMembers, teamBMembers);
 
     createdMatchIds.push(matchId);
@@ -130,8 +146,25 @@ const winnerSnap = await getDoc(winnerRef);
     const teamAMembers = await fetchTeamMembers(teamA.id);
     const teamBMembers = await fetchTeamMembers(teamB.id);
 
-    await createRound(matchId, 1, "round 1", teamAMembers.slice(0, 2), teamBMembers.slice(0, 2));
-    await createRound(matchId, 2, "round 2", teamAMembers.slice(2, 3), teamBMembers.slice(2, 3));
+    // Round 1: Speaker1 + Speaker2
+    await createRound(
+      matchId,
+      1,
+      "round 1",
+      teamAMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2"),
+      teamBMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2")
+    );
+
+    // Round 2: Policy
+    await createRound(
+      matchId,
+      2,
+      "round 2",
+      teamAMembers.filter(m => m.role === "Policy"),
+      teamBMembers.filter(m => m.role === "Policy")
+    );
+
+    // Round 3: all members (team-level)
     await createRound(matchId, 3, "round 3", teamAMembers, teamBMembers);
 
     createdMatchIds.push(matchId);
@@ -202,24 +235,29 @@ export async function generateFinals() {
   // ✅ 4. Team members + rounds
   const teamAMembers = await fetchTeamMembers(teamA.id);
   const teamBMembers = await fetchTeamMembers(teamB.id);
-
+  // Round 1: Speaker1 + Speaker2
   await createRound(
     matchId,
     1,
     "round 1",
-    teamAMembers.slice(0, 2),
-    teamBMembers.slice(0, 2)
+    teamAMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2"),
+    teamBMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2")
   );
+
+  // Round 2: Policy
   await createRound(
     matchId,
     2,
     "round 2",
-    teamAMembers.slice(2, 3),
-    teamBMembers.slice(2, 3)
+    teamAMembers.filter(m => m.role === "Policy"),
+    teamBMembers.filter(m => m.role === "Policy")
   );
+
+  // Round 3: team-level
   await createRound(matchId, 3, "round 3", teamAMembers, teamBMembers);
 
   createdMatchIds.push(matchId);
 
   return createdMatchIds;
+
 }

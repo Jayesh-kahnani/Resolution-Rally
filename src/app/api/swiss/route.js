@@ -207,17 +207,17 @@ export async function generateSwissMatch(prevMatchIds = [], roundNumber = 2) {
       matchId,
       1,
       "round 1",
-      teamAMembers.filter(m => m.role === "speaker1" || m.role === "speaker2"),
-      teamBMembers.filter(m => m.role === "speaker1" || m.role === "speaker2")
+      teamAMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2"),
+      teamBMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2")
     );
 
-    // Round 2: select participants with role = "policy"
+    // Round 2: select participants with role = "Policy"
     await createRound(
       matchId,
       2,
       "round 2",
-      teamAMembers.filter(m => m.role === "policy"),
-      teamBMembers.filter(m => m.role === "policy")
+      teamAMembers.filter(m => m.role === "Policy"),
+      teamBMembers.filter(m => m.role === "Policy")
     );
 
     // Round 3: team-level (all members)
