@@ -3,10 +3,9 @@
 
 import { useState } from "react"
 import { addTeamWithParticipants } from "@/app/api/teams/route"
-"use client";
 
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
-import { db } from "../../firebaseConfig"; // adjust path if needed
+import { db } from "../../../../firebaseConfig"; // adjust path if needed
 
 
 export default function AdminPage() {
