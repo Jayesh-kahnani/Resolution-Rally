@@ -110,7 +110,7 @@ async function handleCreateMatches() {
       const { teamA: teamAId, teamB: teamBId } = pairings[i];
       if (!teamAId || !teamBId) continue;
 
-      const matchId = `match-1-${i + 1}`; // dynamic match ID
+      const matchId = `match-2-${i + 1}`; // dynamic match ID
 
       // Delete existing rounds if match already exists
       const matchDocRef = doc(db, "matches", matchId);
