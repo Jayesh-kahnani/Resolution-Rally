@@ -16,6 +16,7 @@ import {
 import { generateMatch1 } from "@/app/api/matches/route";
 
 const ROUND_CRITERIA_MAX = {
+  
   "round 1": { matter: 8, manner: 6, method: 6 },
   "round 2": { matter: 15, manner: 10, feasibilitycreativity: 10 },
   "round 3": { questions: 10, answers: 10, answertoadjudicator: 5 },
