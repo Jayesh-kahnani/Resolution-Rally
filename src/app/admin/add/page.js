@@ -3,6 +3,11 @@
 
 import { useState } from "react"
 import { addTeamWithParticipants } from "@/app/api/teams/route"
+"use client";
+
+import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import { db } from "../../firebaseConfig"; // adjust path if needed
+
 
 export default function AdminPage() {
   const [teamName, setTeamName] = useState("")
@@ -20,6 +25,30 @@ export default function AdminPage() {
     newParticipants[index].name = value
     setParticipants(newParticipants)
   }
+/**
+ * Reset all team stats (totalScore, wins, losses, matchesPlayed) to 0
+ */
+ async function resetTeamStats() {
+  try {
+    const teamsRef = collection(db, "teams");
+    const snap = await getDocs(teamsRef);
+
+    const updates = snap.docs.map(async (teamDoc) => {
+      const teamRef = doc(db, "teams", teamDoc.id);
+      await updateDoc(teamRef, {
+        totalScore: 0,
+        wins: 0,
+        losses: 0,
+        matchesPlayed: 0,
+      });
+    });
+
+    await Promise.all(updates);
+    console.log("✅ All team stats reset to 0");
+  } catch (err) {
+    console.error("❌ Error resetting team stats", err);
+  }
+}
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -97,6 +126,13 @@ export default function AdminPage() {
       </form>
 
       {message && <p className="mt-4">{message}</p>}
+      <button
+  onClick={resetTeamStats}
+  className="bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700 transition"
+>
+  Reset All Team Stats
+</button>
+
     </div>
   )
 }
