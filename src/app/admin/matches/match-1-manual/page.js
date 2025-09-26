@@ -8,6 +8,7 @@ import {
   doc,
   setDoc,
   updateDoc,
+  getDoc,
   deleteDoc,
   query,
   where,
@@ -42,59 +43,22 @@ export default function Match1Page() {
   }
 
   async function fetchMatchesAndRounds() {
-    const snap = await getDocs(query(collection(db, "matches"), where("day", "==", 1)));
+    const snap = await getDocs(
+      query(collection(db, "matches"), where("day", "==", 1))
+    );
     const matchList = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     setMatches(matchList);
 
     const roundsData = {};
     for (const match of matchList) {
-      const rSnap = await getDocs(collection(db, "matches", match.id, "rounds"));
+      const rSnap = await getDocs(
+        collection(db, "matches", match.id, "rounds")
+      );
       const rDocs = rSnap.docs.map((r) => ({ id: r.id, ...r.data() }));
       rDocs.sort((a, b) => (a.roundNumber || 0) - (b.roundNumber || 0));
       roundsData[match.id] = rDocs;
     }
     setRounds(roundsData);
-  }
-
-  /** ---------------- Score Handling ---------------- **/
-  function handleScoreChange(matchId, roundId, teamKey, crit, val, rtype, pid = null) {
-    const roundKey = `round ${rtype.toString().split(" ")[1] || rtype}`;
-    const maxVal = ROUND_CRITERIA_MAX[roundKey]?.[crit.toLowerCase()] || 9999;
-    let num = Number(val);
-    if (isNaN(num)) num = 0;
-    num = Math.min(Math.max(num, 0), maxVal);
-
-    setRounds((prev) => {
-      const rList = prev[matchId] || [];
-      const newRList = rList.map((r) => {
-        if (r.id !== roundId) return r;
-        const newScores = JSON.parse(JSON.stringify(r.scores || {}));
-        if (r.roundNumber === 3) {
-          if (!newScores[teamKey]) newScores[teamKey] = {};
-          newScores[teamKey][crit] = num;
-        } else {
-          if (!pid) return r;
-          if (!newScores[teamKey]) newScores[teamKey] = {};
-          if (!newScores[teamKey][pid]) newScores[teamKey][pid] = {};
-          newScores[teamKey][pid][crit] = num;
-        }
-        return { ...r, scores: newScores };
-      });
-      return { ...prev, [matchId]: newRList };
-    });
-  }
-
-  async function handleSaveScores(matchId, roundId) {
-    const round = (rounds[matchId] || []).find((r) => r.id === roundId);
-    if (!round) return;
-    try {
-      await updateDoc(doc(db, "matches", matchId, "rounds", roundId), { scores: round.scores });
-      setSavedRounds((prev) => ({ ...prev, [roundId]: true }));
-      setTimeout(() => setSavedRounds((prev) => ({ ...prev, [roundId]: false })), 2000);
-    } catch (err) {
-      console.error("Failed to save scores", err);
-      setMessage("❌ Error saving scores");
-    }
   }
 
   /** ---------------- Clear Match 1 ---------------- **/
@@ -103,8 +67,11 @@ export default function Match1Page() {
     setLoading(true);
     try {
       for (const match of matches) {
-        const rSnap = await getDocs(collection(db, "matches", match.id, "rounds"));
-        for (const r of rSnap.docs) await deleteDoc(doc(db, "matches", match.id, "rounds", r.id));
+        const rSnap = await getDocs(
+          collection(db, "matches", match.id, "rounds")
+        );
+        for (const r of rSnap.docs)
+          await deleteDoc(doc(db, "matches", match.id, "rounds", r.id));
         await deleteDoc(doc(db, "matches", match.id));
       }
       setMatches([]);
@@ -133,64 +100,78 @@ export default function Match1Page() {
     setPairings(pairings.filter((_, i) => i !== idx));
   }
 
-  /** ---------------- Create Manual Matches ---------------- **/
-  async function handleCreateMatches() {
-    if (pairings.length === 0) return alert("Add at least one pairing");
+/** ---------------- Create Manual Matches ---------------- **/
+async function handleCreateMatches() {
+  if (pairings.length === 0) return alert("Add at least one pairing");
 
-    setLoading(true);
-    try {
-      for (let i = 0; i < pairings.length; i++) {
-        const { teamA: teamAId, teamB: teamBId } = pairings[i];
-        if (!teamAId || !teamBId) continue;
+  setLoading(true);
+  try {
+    for (let i = 0; i < pairings.length; i++) {
+      const { teamA: teamAId, teamB: teamBId } = pairings[i];
+      if (!teamAId || !teamBId) continue;
 
-        const matchId = `match-1-${i + 1}`; // dynamic match ID
+      const matchId = `match-1-${i + 1}`; // dynamic match ID
 
-        const teamAMembers = await fetchTeamMembers(teamAId).catch(() => []);
-        const teamBMembers = await fetchTeamMembers(teamBId).catch(() => []);
-
-        await setDoc(doc(db, "matches", matchId), {
-          day: 1,
-          round: "Match 1",
-          status: "scheduled",
-          teamA: { id: teamAId, name: teams.find(t => t.id === teamAId)?.name || "TBD" },
-          teamB: { id: teamBId, name: teams.find(t => t.id === teamBId)?.name || "TBD" },
-          winner: null,
-          loser: null,
-          createdAt: new Date(),
-        });
-
-        // Round 1: Speaker1 & Speaker2
-        await createRound(
-          matchId,
-          1,
-          "round 1",
-          teamAMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2"),
-          teamBMembers.filter(m => m.role === "Speaker1" || m.role === "Speaker2")
-        );
-
-        // Round 2: Policy
-        await createRound(
-          matchId,
-          2,
-          "round 2",
-          teamAMembers.filter(m => m.role === "Policy"),
-          teamBMembers.filter(m => m.role === "Policy")
-        );
-
-        // Round 3: team-level
-        await createRound(matchId, 3, "round 3", teamAMembers || [], teamBMembers || []);
+      // Delete existing rounds if match already exists
+      const matchDocRef = doc(db, "matches", matchId);
+      const matchSnap = await getDoc(matchDocRef);
+      if (matchSnap.exists()) {
+        const rSnap = await getDocs(collection(db, "matches", matchId, "rounds"));
+        for (const r of rSnap.docs) {
+          await deleteDoc(doc(db, "matches", matchId, "rounds", r.id));
+        }
       }
 
-      setMessage("✅ Manual Match 1 generated!");
-      fetchMatchesAndRounds();
-    } catch (err) {
-      console.error(err);
-      setMessage("❌ Error creating manual matches");
-    } finally {
-      setLoading(false);
-    }
-  }
+      const teamAMembers = await fetchTeamMembers(teamAId).catch(() => []);
+      const teamBMembers = await fetchTeamMembers(teamBId).catch(() => []);
 
+      // Create or overwrite match document
+      await setDoc(matchDocRef, {
+        day: 1,
+        round: "Match 1",
+        status: "scheduled",
+        teamA: {
+          id: teamAId,
+          name: teams.find((t) => t.id === teamAId)?.name || "TBD",
+        },
+        teamB: {
+          id: teamBId,
+          name: teams.find((t) => t.id === teamBId)?.name || "TBD",
+        },
+        winner: null,
+        loser: null,
+        createdAt: new Date(),
+      });
+
+      // Create rounds
+      await createRound(
+        matchId,
+        1,
+        "round 1",
+        teamAMembers.filter((m) => ["Speaker1", "Speaker2"].includes(m.role)),
+        teamBMembers.filter((m) => ["Speaker1", "Speaker2"].includes(m.role))
+      );
+
+      await createRound(
+        matchId,
+        2,
+        "round 2",
+        teamAMembers.filter((m) => m.role === "Policy"),
+        teamBMembers.filter((m) => m.role === "Policy")
+      );
+
+      await createRound(matchId, 3, "round 3", teamAMembers, teamBMembers);
+    }
+
+    setMessage("✅ Manual Match 1 generated without duplication!");
+    fetchMatchesAndRounds();
+  } catch (err) {
+    console.error(err);
+    setMessage("❌ Error creating manual matches");
+  } finally {
+    setLoading(false);
+  }
+}
   /** ---------------- Compute Team Total ---------------- **/
   function computeTeamTotal(matchId, teamKey) {
     const rList = rounds[matchId] || [];
@@ -198,12 +179,25 @@ export default function Match1Page() {
     for (const r of rList) {
       if (r.roundNumber === 3) {
         const teamScores = r.scores?.[teamKey] || {};
-        total += Object.values(teamScores).reduce((s, v) => s + Number(v || 0), 0);
+        total += Object.values(teamScores).reduce(
+          (s, v) => s + Number(v || 0),
+          0
+        );
       } else {
         const teamScores = r.scores?.[teamKey] || {};
         for (const p of Object.values(teamScores)) {
           total += Object.entries(p)
-            .filter(([k]) => !["id","name","role","teamId","rootId","totalScore"].includes(k))
+            .filter(
+              ([k]) =>
+                ![
+                  "id",
+                  "name",
+                  "role",
+                  "teamId",
+                  "rootId",
+                  "totalScore",
+                ].includes(k)
+            )
             .reduce((s, [_, v]) => s + Number(v || 0), 0);
         }
       }
@@ -214,7 +208,9 @@ export default function Match1Page() {
   /** ---------------- UI ---------------- **/
   return (
     <div className="max-w-6xl mx-auto mt-10 p-8 bg-gray-50 rounded-xl shadow-lg">
-      <h1 className="text-3xl font-extrabold mb-6 text-gray-800 tracking-tight">Match 1 - Manual Pairing</h1>
+      <h1 className="text-3xl font-extrabold mb-6 text-gray-800 tracking-tight">
+        Match 1 - Manual Pairing
+      </h1>
 
       <div className="mb-6">
         <h2 className="font-semibold mb-2">Add Pairings</h2>
@@ -222,26 +218,53 @@ export default function Match1Page() {
           <div key={idx} className="flex gap-2 mb-2 items-center">
             <select
               value={p.teamA}
-              onChange={(e) => handlePairingChange(idx, "teamA", e.target.value)}
+              onChange={(e) =>
+                handlePairingChange(idx, "teamA", e.target.value)
+              }
               className="border rounded px-2 py-1"
             >
               <option value="">Select Team A</option>
-              {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
             </select>
             <span className="font-bold">vs</span>
             <select
               value={p.teamB}
-              onChange={(e) => handlePairingChange(idx, "teamB", e.target.value)}
+              onChange={(e) =>
+                handlePairingChange(idx, "teamB", e.target.value)
+              }
               className="border rounded px-2 py-1"
             >
               <option value="">Select Team B</option>
-              {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
             </select>
-            <button onClick={() => handleRemovePairing(idx)} className="text-red-600 font-bold px-2">X</button>
+            <button
+              onClick={() => handleRemovePairing(idx)}
+              className="text-red-600 font-bold px-2"
+            >
+              X
+            </button>
           </div>
         ))}
-        <button onClick={handleAddPairing} className="bg-blue-600 text-white px-4 py-1 rounded mt-2">Add Pairing</button>
-        <button onClick={handleCreateMatches} className="bg-green-600 text-white px-4 py-1 rounded ml-2">Create Matches</button>
+        <button
+          onClick={handleAddPairing}
+          className="bg-blue-600 text-white px-4 py-1 rounded mt-2"
+        >
+          Add Pairing
+        </button>
+        <button
+          onClick={handleCreateMatches}
+          className="bg-green-600 text-white px-4 py-1 rounded ml-2"
+        >
+          Create Matches
+        </button>
       </div>
 
       <button
@@ -258,10 +281,17 @@ export default function Match1Page() {
         const totalB = computeTeamTotal(match.id, "teamB");
 
         return (
-          <div key={match.id} className="bg-white border rounded-lg p-6 mb-6 shadow hover:shadow-md transition">
+          <div
+            key={match.id}
+            className="bg-white border rounded-lg p-6 mb-6 shadow hover:shadow-md transition"
+          >
             <h2 className="text-xl font-semibold text-gray-800 mb-4 flex justify-between items-center">
-              <span>{match.teamA?.name} vs {match.teamB?.name}</span>
-              <span className="px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-800">{match.status}</span>
+              <span>
+                {match.teamA?.name} vs {match.teamB?.name}
+              </span>
+              <span className="px-3 py-1 text-sm rounded-full bg-yellow-100 text-yellow-800">
+                {match.status}
+              </span>
             </h2>
 
             {/* Render rounds & scores here (similar to your previous code) */}

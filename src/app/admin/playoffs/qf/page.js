@@ -153,6 +153,7 @@ async function handleEndMatch(matchId, teamAId, teamBId, totalA, totalB, rounds)
       losses: increment(winnerId === teamAId ? 1 : 0),
       matchesPlayed: increment(1),
     });
+    alert("Match ended! dont click match end again!!! (for this match obv)");
 
     setMessage("✅ Match ended!");
   } catch (err) {
