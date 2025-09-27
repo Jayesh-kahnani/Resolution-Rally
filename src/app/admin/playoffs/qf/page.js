@@ -257,9 +257,9 @@ async function handleEndMatch(matchId, teamAId, teamBId, totalA, totalB, rounds)
           {loading ? "Generating..." : "Generate QFs"}
         </button>
 
-        <button onClick={handleClearMatch} disabled={loading || matches.length === 0} className="bg-red-600 text-white px-5 py-2 rounded-lg shadow hover:bg-red-700 disabled:opacity-50">
+        {/* <button onClick={handleClearMatch} disabled={loading || matches.length === 0} className="bg-red-600 text-white px-5 py-2 rounded-lg shadow hover:bg-red-700 disabled:opacity-50">
           Clear QFs
-        </button>
+        </button> */}
       </div>
 
       {message && <p className="mb-6 text-lg font-medium text-center text-blue-700 bg-blue-100 py-2 rounded">{message}</p>}
