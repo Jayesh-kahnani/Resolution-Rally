@@ -5,7 +5,7 @@ import { db } from "../../../../firebaseConfig";
 import { collection, getDocs, doc, deleteDoc, updateDoc } from "firebase/firestore";
 import { fetchTeamMembers, createRound } from "@/app/api/matches/route";
 
-export default function FixMatch43() {
+export default function FixMatch42() {
   const [teams, setTeams] = useState([]);
   const [teamAId, setTeamAId] = useState("");
   const [teamBId, setTeamBId] = useState("");
@@ -25,12 +25,12 @@ export default function FixMatch43() {
     }
   }
 
-  async function fixMatch43() {
+  async function fixMatch42() {
     if (!teamAId || !teamBId) return alert("Select both teams");
 
     setLoading(true);
     try {
-      const matchId = "match-4-3"; // 👈 updated here
+      const matchId = "match-4-2";
 
       // Delete existing rounds
       const rSnap = await getDocs(collection(db, "matches", matchId, "rounds"));
@@ -67,10 +67,10 @@ export default function FixMatch43() {
 
       await createRound(matchId, 3, "round 3", teamAMembers, teamBMembers);
 
-      alert("✅ Match-4-3 fixed successfully!");
+      alert("✅ Match-4-2 fixed successfully!");
     } catch (err) {
       console.error(err);
-      alert("❌ Error fixing match-4-3");
+      alert("❌ Error fixing match-4-2");
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export default function FixMatch43() {
 
   return (
     <div>
-      <h2>Fix Match-4-3</h2> {/* 👈 updated here */}
+      <h2>Fix Match-4-2</h2>
       <select value={teamAId} onChange={(e) => setTeamAId(e.target.value)}>
         <option value="">-- Select Team A --</option>
         {Array.isArray(teams) && teams.map((t) => (
@@ -93,8 +93,8 @@ export default function FixMatch43() {
         ))}
       </select>
 
-      <button onClick={fixMatch43} disabled={loading}>
-        {loading ? "Fixing..." : "Fix Match-4-3"}
+      <button onClick={fixMatch42} disabled={loading}>
+        {loading ? "Fixing..." : "Fix Match-4-2"}
       </button>
     </div>
   );
