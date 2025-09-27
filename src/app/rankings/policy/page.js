@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { db } from "../../../../firebaseConfig";
-import { collection, getDocs, query, where, doc } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function PolicySpeakerRanking() {
   const [ranking, setRanking] = useState([]);
@@ -37,7 +37,7 @@ export default function PolicySpeakerRanking() {
           const teamScoresObj = scores[tk] || {};
           Object.values(teamScoresObj).forEach((p) => {
             total += Object.values(p)
-              .filter((v, i) => typeof v === "number")
+              .filter((v) => typeof v === "number")
               .reduce((s, v) => s + v, 0);
           });
 
@@ -46,12 +46,16 @@ export default function PolicySpeakerRanking() {
         });
       }
 
-      // Step 3: find policy speaker for each team
+      // Step 3: fetch team names and policy speakers
       let speakerScores = [];
+      const teamsSnap = await getDocs(collection(db, "teams"));
+      const teamsMap = {};
+      teamsSnap.docs.forEach((t) => {
+        teamsMap[t.id] = t.data().name;
+      });
 
       for (const [teamId, totalScore] of Object.entries(teamScores)) {
         const participantsSnap = await getDocs(collection(db, "teams", teamId, "participants"));
-
         participantsSnap.forEach((p) => {
           const part = p.data();
           if (part.role.toLowerCase() === "policy") {
@@ -59,6 +63,7 @@ export default function PolicySpeakerRanking() {
               speakerId: p.id,
               name: part.name,
               teamId,
+              teamName: teamsMap[teamId] || "Unknown",
               teamScore: totalScore,
             });
           }
@@ -80,7 +85,7 @@ export default function PolicySpeakerRanking() {
       <ul>
         {ranking.map((s, i) => (
           <li key={s.speakerId}>
-            #{i + 1} {s.name} (Team {s.teamId}) — Round 2 Total: {s.teamScore}
+            #{i + 1} {s.name} (Team: {s.teamName}) — Round 2 Total: {s.teamScore}
           </li>
         ))}
       </ul>
