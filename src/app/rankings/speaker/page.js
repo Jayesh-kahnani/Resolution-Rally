@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "../../../../firebaseConfig";
+import { db } from "../../../../../firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function SpeakerRanking() {
@@ -10,6 +10,13 @@ export default function SpeakerRanking() {
   useEffect(() => {
     const fetchRanking = async () => {
       let speakerScores = {}; // { participantId: { name, teamId, totalScore } }
+
+      // Step 0: fetch all teams to get team names
+      const teamsSnap = await getDocs(collection(db, "teams"));
+      const teamsMap = {}; // teamId -> name
+      teamsSnap.docs.forEach((t) => {
+        teamsMap[t.id] = t.data().name;
+      });
 
       // Step 1: fetch matches (day 1–3)
       const matchesSnap = await getDocs(
@@ -40,6 +47,7 @@ export default function SpeakerRanking() {
               speakerScores[pid] = {
                 name: pScores.name || "Unknown",
                 teamId: pScores.teamId || matchData[tk]?.id,
+                teamName: teamsMap[pScores.teamId || matchData[tk]?.id] || "Unknown",
                 totalScore: 0,
               };
             }
@@ -66,7 +74,7 @@ export default function SpeakerRanking() {
       <ul>
         {ranking.map((s, i) => (
           <li key={`${s.teamId}-${i}`}>
-            #{i + 1} {s.name} (Team {s.teamId}) — Total Score: {s.totalScore}
+            #{i + 1} {s.name} (Team: {s.teamName}) — Total Score: {s.totalScore}
           </li>
         ))}
       </ul>
